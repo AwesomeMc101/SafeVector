@@ -6,7 +6,6 @@ private:
     int sz = 0;
     int r_sz = 0;
 public:
-
     /* Set vector equal to arr */
     void operator =(std::initializer_list<T> n) {
         _data = (T*)malloc(sizeof(T) * n.size());
@@ -58,6 +57,19 @@ public:
         free(_data); /* Free old allocated memory */
         _data = nd; /* Make data point to new array */
         sz += il.size(); /* Add sizeof list to sz */
+    }
+
+    void insert(SafeVector<T> v, size_t l) {
+        if (l > sz) { return; }
+
+        T* nd = static_cast<T*>(malloc((v.size() + sz) * sizeof(T))); //New size is sz + added size, alloc new arr
+        memcpy(nd, _data, sizeof(T) * l); //Copy data from 0 to insert loc
+        memcpy(nd + l, v.data(), v.size() * sizeof(T)); //Copy inserted data
+        memcpy(nd + l + v.size(), _data + l, (sz - l) * sizeof(T)); //Copy the rest of the old data
+
+        free(_data); //Free old data
+        _data = nd; //Change ptr
+        sz += v.size(); //Inc size
     }
 
     //Erase amount len at location l
@@ -162,6 +174,50 @@ public:
         free(_data);
         _data = nd;
         r_sz = sz;
+    }
+
+    /* Literally all an iterator is is just a pointer. */
+    T* begin() {
+        if (!sz) {
+            return (new T);
+        }
+        return &_data[0];
+    }
+    T* end() {
+        if (!sz) {
+            return (new T);
+        }
+        return &_data[sz];
+    }
+
+    /* Return largest element in vector. Only works on some datatypes. */
+    T* max_element() {
+        T* m = &_data[0]; //Set initial comparison
+        for (int i = 1; i < sz; i++) { //Loop through every other value
+            if (_data[i] > *m) { //If value[i] > current_max
+                m = &_data[i]; //Change current max pointer
+            }
+        }
+        return m; //Return ptr to current max
+    }
+
+    /* Return smallest element in vector. Only works on some datatypes. */
+    T* min_element() { 
+        T* m = &_data[0];
+        for (int i = 1; i < sz; i++) {
+            if (_data[i] < *m) {
+                m = &_data[i];
+            }
+        }
+        return m;
+    }
+
+    /* Return a subvector. Begin location, end location, opt bool to include end location in sub. */
+    SafeVector subvector(size_t begin, size_t end, bool inclusive = false /*Do we include end location?*/) {
+        SafeVector<T> ns;
+        ns.resize(end - begin + (int)inclusive);
+        memcpy(ns.data(), _data + begin, (end - begin+ (int)inclusive) * sizeof(T));
+        return ns;
     }
 
     size_t size() {
